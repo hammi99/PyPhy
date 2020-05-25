@@ -3,32 +3,32 @@ import numpy as np
 class Simulation():
     
     def __init__(
-            masses
+            self
+            ,masses
             ,positions
             ,velocities
             ,G
-            ,dt
     ):
         b = len(positions)
         d = len(positions[0])
         
-        self.M   = np.array(masses)
-        self.R   = np.array(positions)
-        self.dR  = np.array(velocities)
-        self.ddR = np.empty([b, d])         # init acceleration
-        self.G   = G
+        self.m = np.array(masses)
+        self.r = np.array(positions)
+        self.v = np.array(velocities)
+        self.a = np.empty([b, d])       # init acceleration
+        self.G = G
         
-        self.D = np.empty([b, b, d])        # init displacements
-        self.S = np.empty([b, b, d])        # init distances
+        self.d = np.empty([b, b, d])    # init displacements
+        self.s = np.empty([b, b, d])    # init distances
         
-        self.Rb = R[:, np.newaxis]          # init parameters to be used in calculating displacements
+        self.rb = self.r[:, np.newaxis] # init parameters to be used in calculating displacements
         
         
     def step(self, dt):
         
-        self.D   = (self.R - self.Rb)                                   # calculating displacements
-        self.S   = np.linalg.norm(self.D, axis=2, keepdims=True)        # calculating distance
-        self.ddR = self.G * self.M @ np.nan_to_num(self.D / self.S**3)  # calculating acceleration
+        self.d = (self.r - self.rb)                                   # calculating displacements
+        self.s = np.linalg.norm(self.d, axis=2, keepdims=True)        # calculating distance
+        self.a = self.G * self.m @ np.nan_to_num(self.d / self.s**3)  # calculating acceleration
         
-        self.R  += dt * self.dR         # updating positions
-        self.dR += dt * self.ddR        # updating velocities
+        self.r += dt * self.v        # updating positions
+        self.v += dt * self.a        # updating velocities
