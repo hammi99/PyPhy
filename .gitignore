@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+.vscode
+
+.DS_Store
+test.py
+Untitled.pynb
+__pycache__

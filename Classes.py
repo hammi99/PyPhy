@@ -1,13 +1,13 @@
 from math import *
 from Functions import *
 
+
 class Vector:
     def __init__(self ,magnitude ,angle):
 
         self.comp = ressolve(magnitude ,angle)
         self.angle = angle
         self.magnitude = magnitude
-
 
     def Updte(self ,update_vector):
 
@@ -20,12 +20,17 @@ class Vector:
 
 
 class Bodies:
-    def __init__(self ,mass ,radius ,position ,velocity ,acceleration):
 
-        self.mas = mass
-        self.rad = radius
+    def __init__(self 
+                ,mass 
+                ,radius 
+                ,position 
+                ,velocity 
+                ,acceleration):
 
-        self.pos = position
-        self.vel = velocity
-        self.acc = acceleration
-        self.mom = Vector(mass*velocity.magnitude ,velocity.angle)
+        self.mass         = mass
+        self.radius       = radius
+        self.position     = position
+        self.velocity     = velocity
+        self.acceleration = acceleration
+        self.momentum     = Vector(mass*velocity.magnitude ,velocity.angle)

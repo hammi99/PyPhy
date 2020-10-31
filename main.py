@@ -1,44 +1,64 @@
+import os
 import pyglet
 import physics
 import numpy as np
 
+clear = lambda: os.system('clear')
+
 x = 800
 y = 800 
-b = 100
 d = 2
-G = 5
-dt = 1/200
-bounds = [x, y]
+n = 100
+G = 20
+dt = 1/500
+bounds = [[x, y], [0, 0]]
 
 sim = physics.Simulation(
-     masses     =  np.random.random([b]) * 100
-    ,positions  =  np.random.random([b, d]) * 100 + 350
-    ,velocities = (np.random.random([b, d]) - 0.5) * 50
-    ,G          =  G
-    ,bounds     = bounds
-    ,radii      = 0
+    masses     =  np.random.random([n]) * 100,
+    radii      =  10,
+    positions  =  np.random.random([n, d]) * 100 + 350,
+    velocities =  np.random.normal(0, 33, [n, d]),
+    G          =  G,
+    bounds     =  bounds
 )
 
 window = pyglet.window.Window(x, y)
 p = sim.r.ravel()
-n = sim.r.shape[0]
+n = len(p)//2
 
+batch = pyglet.graphics.Batch()
+vertex_list = batch.add(n, pyglet.gl.GL_POINTS
+    ,None
+    ,('v2f', p)
+)
+vertex_list.vertices = p
 
 def update(dt):
     global sim
+    
     sim.step(dt)
     sim.check_bounds()
-    fps = pyglet.clock.get_fps()
-    print(fps)
+    #sim.check_collission(dt)
+    clear()
+    print(f'fps: {pyglet.clock.get_fps()}')
+
 
 
 @window.event
 def on_draw():
 
     window.clear()
+    vertex_list.vertices = sim.r.ravel()
+    batch.draw()
+    '''
     pyglet.graphics.draw(n, pyglet.gl.GL_POINTS
         ,('v2f', p)
     )
+    for x in p:
+        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS
+            ,('v2f', x)
+    )
+    '''
 
 if __name__ == '__main__':
 
