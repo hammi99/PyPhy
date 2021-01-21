@@ -8,16 +8,20 @@ clear = lambda: os.system('clear')
 x = 800
 y = 800 
 d = 2
-n = 100
+n = 10
 G = 20
 dt = 1/500
-bounds = [[x, y], [0, 0]]
+
+bounds = [
+    [0, 0], 
+    [x, y],
+]
 
 sim = physics.Simulation(
     masses     =  np.random.random([n]) * 100,
     radii      =  10,
     positions  =  np.random.random([n, d]) * 100 + 350,
-    velocities =  np.random.normal(0, 33, [n, d]),
+    velocities =  np.random.normal(0, 100, [n, d]),
     G          =  G,
     bounds     =  bounds
 )
