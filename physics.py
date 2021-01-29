@@ -1,3 +1,4 @@
+import pyglet
 import numpy as np
 
 
@@ -5,37 +6,32 @@ class Simulation():
     
     def __init__(
             self,
-            masses      = np.random.random(size= [100])    * 100,
-            radii       = np.random.random(),
-            positions   = np.random.random(size= [100, 2]) * 100,
-            velocities  = np.random.random(size= [100, 2]) * 100 + 350,
-            G           = np.random.random(size= [1]),
-            bounds      = np.array([[]])
+            masses      = np.random.normal( 50, 100, size= [100]),
+            radii       = np.random.normal(  1,   1, size= [1]),
+            positions   = np.random.normal( 50, 100, size= [100, 2]),
+            velocities  = np.random.normal(350, 100, size= [100, 2]),
+            G           = np.random.normal(  1,   1, size= [1]),
+            # bounds      = np.array([[]])
+            bounds      = np.array([500, 500])
     ):
         
-        self.b = np.array(bounds)
         self.r = np.array(positions,  dtype= float)
+        self.b = np.array(bounds)#.reshape([2, 1, d])
         self.v = np.array(velocities, dtype= float)
-        self.M = np.array(masses)
+        self.m = np.array(masses)
         self.R = np.array(radii)
         self.G = np.array(G)
 
-        n, d = self.r.shape
+        # n, d = self.r.shape
 
-        self.a = np.zeros(shape= [n, d])
+        # self.a = np.zeros(shape= [n, d])
+        # self.d = np.zeros(shape= [n, n, d])
+        # self.s = np.zeros(shape= [n, n])
 
-        self.d = np.zeros(shape= [n, n, d])
-        self.s = np.zeros(shape= [n, n])
+        # self.M = self.G * self.m * self.m[:, None]
 
-        self.M2 = self.M * self.M[:, None]
+        # if self.r.ndim == 2: self.setupDisplay()
 
-        # self.t = np.triu_indices(n, k= 1)
-
-        # self.ceil  = self.b[1] - self.R
-        # self.floor = self.b[0] + self.R
-        
-        #self.Mb = 2 * self.M / (self.M + self.M[..., np.newaxis])
-        #self.Rb = self.R + self.R[..., np.newaxis]    # sum of radii of every possible pair
         
 
     def step(self, dt):
@@ -43,13 +39,9 @@ class Simulation():
         self.r += dt * self.v           # updating positions
         self.v -= dt * self.a           # updating velocities
 
-        d = self.r - self.r[:, None]
-        d = np.linalg.norm(d, axis= -1) # distances
-
-        U = self.G * self.M2 / d 
-        U = U.sum()                     # negative of absolute potential energy    refrence wikipedia n-body problem
-
-        self.a = U / self.v / self.M
+        # T = (self.m * self.v ** 2).sum() / 2              # total kinetic energy of the system
+        # U = H - T                                         # total potential energy of the system
+        #                                                     ma = dU/dv ???
 
         # t0, t1 = self.t
 
@@ -67,29 +59,23 @@ class Simulation():
 
         
 
-    def check_bounds(self):
+    def checkBounds(self):
 
-        mask1 = np.where(self.r < self.b[0])
-        mask2 = np.where(self.r > self.b[1])
+        mask = np.where(self.r < self.b[0])
+        self.v[mask] *= -1
+        self.r[mask] = self.b[0][mask[1]];
 
-        self.v[mask1] *= -1
-        self.v[mask2] *= -1
+        mask = np.where(self.r > self.b[1])
+        self.v[mask] *= -1
+        self.r[mask] = self.b[1][mask[1]];
 
-        # self.r[mask1] = self.b[0][mask1[1]]
-        # self.r[mask2] = self.b[1][mask1[1]]
 
-        # mask = np.where(self.ceil < self.r)
+
         
-        # self.v[mask] = -self.v[mask]
-        # self.r[mask] =  self.ceil[mask[1]]
-               
-        # mask = np.where(self.r < self.floor)
-        
-        # self.v[mask] = -self.v[mask]
-        # self.r[mask] =  self.floor[mask[1]]
 
 
-    def check_collission(self, dt):
+
+    def checkCollission(self, dt):
 
         self.r.argsort()
 
@@ -109,6 +95,24 @@ class Simulation():
         # self.v[:, filter2[0]] -= (mass_ratios * del_v * del_vr_hat)
 
 
+    def setupDisplay(self):
+
+        self.window = pyglet.window.Window(*self.b[1][0])
+
+        p = self.r.ravel()
+        n = len(p)//2
+
+        batch = pyglet.graphics.Batch()
+        vertex_list = batch.add(
+            n, 
+            pyglet.gl.GL_POINTS,
+            None,
+            ('v2f', p)
+        )
+        vertex_list.vertices = p
+        pass
+
+
 
 if __name__ == "__main__":
 
@@ -118,10 +122,10 @@ if __name__ == "__main__":
     bounds = 100
 
     sim = Simulation(
-        masses     =  np.random.random([b]) * 100,
-        positions  =  np.random.random([b, d]) * 100 + 350,
-        velocities = (np.random.random([b, d]) - 0.5) * 50,
-        G          =  G,
+        masses     = np.random.normal([b]) * 100,
+        positions  = np.random.normal([b, d]) * 100 + 350,
+        velocities = np.random.normal([b, d]) * 50 - 25,
+        G          = G,
         bounds     = bounds,
         radii      = 0,
     )

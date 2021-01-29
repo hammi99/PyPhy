@@ -8,7 +8,7 @@ clear = lambda: os.system('clear')
 x = 800
 y = 800 
 d = 2
-n = 10
+n = 100
 G = 20
 dt = 1/500
 
@@ -31,9 +31,11 @@ p = sim.r.ravel()
 n = len(p)//2
 
 batch = pyglet.graphics.Batch()
-vertex_list = batch.add(n, pyglet.gl.GL_POINTS
-    ,None
-    ,('v2f', p)
+vertex_list = batch.add(
+    n, 
+    pyglet.gl.GL_POINTS,
+    None,
+    ('v2f', p)
 )
 vertex_list.vertices = p
 
@@ -41,7 +43,7 @@ def update(dt):
     global sim
     
     sim.step(dt)
-    sim.check_bounds()
+    sim.checkBounds()
     #sim.check_collission(dt)
     clear()
     print(f'fps: {pyglet.clock.get_fps()}')
