@@ -35,9 +35,10 @@ vertex_list = batch.add(
     n, 
     pyglet.gl.GL_POINTS,
     None,
-    ('v2f', p)
+    # ('v2f', p)
+    'v2f'
 )
-vertex_list.vertices = p
+# vertex_list.vertices = p
 
 def update(dt):
     global sim
@@ -56,15 +57,7 @@ def on_draw():
     window.clear()
     vertex_list.vertices = sim.r.ravel()
     batch.draw()
-    '''
-    pyglet.graphics.draw(n, pyglet.gl.GL_POINTS
-        ,('v2f', p)
-    )
-    for x in p:
-        pyglet.graphics.draw(1, pyglet.gl.GL_POINTS
-            ,('v2f', x)
-    )
-    '''
+    
 
 if __name__ == '__main__':
 

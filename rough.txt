@@ -1,3 +1,0 @@
-calculate recoil
-
-self.v = self.v -  (self.v - self.v) @ self.d.T) * (self.d / self.s)
