@@ -54,42 +54,54 @@ class Simulation:
 
     def checkCollission(self):
 
-        a = self.r + self.R
-        b = self.r - self.R
+        # use sweep and pruning algorithm in the future
 
-        mask = True
+        d = self.r - self.r[:, None]
+        d = np.linalg.norm(d, axis= -1)
 
-        for p in self.r.T:
-            i = p.argsort()
-            j = i.argsort()
+        mask = d < (self.R + self.R[..., None])
+        np.fill_diagonal(mask, False)
+        m, _ = np.where(mask)
 
-            b[i][:-1] < a[i][1:]
+        self.colours[:] = 255
+        self.colours[m] = np.array([255, 0, 0])
 
-        self.r.argsort()
+        del_v = self.v - self.v[:, None]
+        del_r = self.r - self.r[:, None]
 
-        # filter = (self.s < self.Rb) & (self.s > 0)                                                # shape= [b, b]
-        # filter2 = np.where(filter)  # [2, n]
+        M = 2 * self.m / (self.m + self.m[..., None])
 
-        # mass_ratios = self.Mb[filter]                                                         # shape= [n]
-        # del_v       = self.v[:, filter2[0]] - self.v[:, filter2[1]]
-        # del_r       = self.d[:, filter]
-        # v_dot_r     = np.einsum('ij,ij->j', del_v, del_r)      # shape= [n]
-        # del_vr_hat  = np.nan_to_num(
-        #       v_dot_r \
-        #     / self.s[filter]**2
-        # )                                                                           # shape= [d, n]
-        
-        # #self.r[:, filter2[0]] -= dt * self.v[:, filter2[0]]
-        # self.v[:, filter2[0]] -= (mass_ratios * del_v * del_vr_hat)
+        tmp = M                                 \
+            * (del_v * del_r).sum(axis= -1)     \
+            / (del_r ** 2   ).sum(axis= -1)        
+        tmp = tmp[..., None]                    \
+            * del_r
+
+        tmp[~mask] = 0
+
+        # increases total energy of the system for some reason
+        # suspected reason: after collision (boundry overlap)
+        # positions are not updated to eliminate boundry overlap
+        # only velocities are updated so a single collision might 
+        # be interpreted as multiple collisions causing velocity 
+        # updates again and again
+        # or maybe, in the elastic collision equation, we are 
+        # using the distance between the centeres of the bodies 
+        # which may or may not be smaller than the sum or their 
+        # radii. in the real world difference b/w positions is 
+        # equal to the sum of radii for colliding bodies
+
+        # self.v[m] -= tmp[mask]
 
 
     def setupDisplay(self):
 
-        m = 20
+        m = 150
         n = self.r.shape[0]
 
-        x = np.linspace(0, 2*np.pi, num= m)
+        self.colours = np.full(shape= [n, m, 3], fill_value= 255)
 
+        x = np.linspace(0, 2*np.pi, num= m)
         circumfrence = np.array([
             np.cos(x),
             np.sin(x),
@@ -100,9 +112,10 @@ class Simulation:
         vertex_list = batch.add(
             n * m, 
             # pyglet.gl.GL_LINES,
-            pyglet.gl.GL_LINES,
+            pyglet.gl.GL_POINTS,
             None,
             'v2f',
+            'c3B',
         )
 
         window = pyglet.window.Window(*self.b[1], resizable= True)
@@ -111,21 +124,47 @@ class Simulation:
         def on_draw():
 
             p = self.r[:, None] + circumfrence
+            c = self.colours
 
             vertex_list.vertices = p.ravel()
+            vertex_list.colors   = c.ravel()
+
             window.clear()
             batch.draw()
+
+
+    def status(self):
+
+        U = 0
+
+        T = self.m                      \
+          * (self.v ** 2).sum(axis= -1) \
+        
+        T = T.sum()
+
+        H = U + T
+
+        r  = ''
+        r += 'energies:\n'
+        r += f'\tTotal    : {H}\n'
+        r += f'\tKinetic  : {U}\n'
+        r += f'\tPotential: {T}\n'
+
+        print(r)
 
 
     def run(self, dt):
 
         def foo(dt):
-            self.step(dt)
-            # self.checkBounds()
-            # self.checkCollission()
 
             os.system('clear')
             print(f'fps: {pyglet.clock.get_fps()}')
+
+            self.step(dt)
+            self.checkBounds()
+            self.checkCollission()
+
+            self.status()
 
 
         pyglet.clock.schedule_interval(foo, dt)
@@ -139,10 +178,10 @@ class Simulation:
 x = 700
 y = 700 
 d = 2
-n = 1000
+n = 10
 G = 20
 dt = 1/500
-R = 1
+R = 10
 
 bounds = [
     [0, 0], 
@@ -152,7 +191,7 @@ bounds = [
 sim = Simulation(
     masses     =  np.random.random([n]) * 100,
     radii      =  R,
-    positions  =  np.random.random([n, d]) * 100 + 350,
+    positions  =  np.random.random([n, d]) * 300 + 350,
     velocities =  np.random.normal(0, 100, [n, d]),
     G          =  G,
     bounds     =  bounds
