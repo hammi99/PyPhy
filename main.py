@@ -3,6 +3,8 @@ import pyglet
 import physics
 import numpy as np
 
+# bla bla bla
+
 clear = lambda: os.system('clear')
 
 x = 800
